@@ -771,14 +771,14 @@ if __name__ == "__main__":
     result_filename = f"result_{current_time}.json"
 
 
-    for bit_per_element in [1]: #[0.5, 1, 2]:
-        for Ks in [256, 512]:
+    for bit_per_element in [0.5]: #[0.5, 1, 2]:
+        for Ks in [256]:
         #for group_size in [4, 8, 16, 32, 64]:
             for num_roles in [1,2]: #, 2]: #, 3]: #, 3, 4]:
                 X = torch.load("/hai/projects/rqllm/poc/datasets_kv/wikitext2_train_0p1_opt125m_keys.pt").numpy()
                 X_org = X
-                X = X_org[:10000]
-                X_test = X_org[20000:30000]
+                X = X_org[:100000]
+                X_test = X_org[200000:300000]
                 n_channels = X.shape[1]
 			#group_size = 4
                 #bit_per_element = 1
