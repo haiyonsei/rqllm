@@ -194,6 +194,22 @@ def compute_max_dot_per_stage(q, codebooks):
         M.append(np.max(dots))
     return M
 
+
+def compute_min_dot_per_stage(q, codebooks):
+    """
+    Given a query vector q and a list of codebooks,
+    compute for each stage t the maximum dot product:
+      M[t] = max_j ( q^T Q_t(j) )
+    where Q_t(j) is the j-th centroid in the t-th codebook.
+    """
+    M = []
+    for cb in codebooks:
+        # Each codebook is assumed to be an array of shape (k, d)
+        # Compute dot product between q and all centroids
+        dots = np.dot(cb, q)  # shape: (k,)
+        M.append(np.min(dots))
+    return M
+
 def partial_dot_product(q, codes, codebooks, t):
     """
     Compute the partial dot product similarity using the first t stages.
@@ -377,12 +393,18 @@ def compute_attention_scores_by_pruning(q, candidates_codes, codebooks, theta=0.
     # Precompute maximum possible dot contributions for each stage given q.
     T = len(codebooks)
     max_dots = compute_max_dot_per_stage(q, codebooks)
+    min_dots = compute_min_dot_per_stage(q, codebooks)
+
     # For each possible stage t, compute the sum of max contributions from remaining stages.
     # That is: R_t = sum_{i=t}^{T-1} max_dots[i]
     R = np.zeros(T + 1)
     for t in range(T-1, -1, -1):
         R[t] = R[t+1] + max_dots[t]
-   
+
+    Rm = np.zeros(T + 1)
+    for t in range(T-1, -1, -1):
+        Rm[t] = Rm[t+1] + min_dots[t]  
+
          # query의 지수 값
     query_exp = np.exp(q)   
     scores = np.zeros(len(candidates_codes))
@@ -402,7 +424,9 @@ def compute_attention_scores_by_pruning(q, candidates_codes, codebooks, theta=0.
             n_dot_products += 1
             scores[idx] = S_t
             z_upper_bound = S_t + R[t]
-            e_z = np.exp(z_upper_bound)/(np.exp(z_upper_bound)+denominator_lower_bound)
+            z_lower_bound = S_t + Rm[t]
+            assert z_lower_bound<=z_upper_bound
+            e_z = np.exp(z_upper_bound)/(np.exp(z_lower_bound)+denominator_lower_bound)
             if e_z<=theta:
                 break
 
