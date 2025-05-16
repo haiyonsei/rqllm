@@ -8,7 +8,7 @@ import argparse
 import sys
 import datetime
 from rqllm.utils import *
-from rqllm.qwkmeans import query_weighted_kmeans
+from rqllm.qwk import query_weighted_kmeans
 from torch import nn
 from rqllm.datasets import create_dataset
 from rqllm.pq import *
@@ -59,7 +59,7 @@ with torch.no_grad():
 def parse_cli():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument('--mode',  choices=['pq', 'rq', 'qwk'], default='rq', help='Training algorithm')
-    p.add_argument('--dataset', choices=['random', 'ptb'], default='random', help='Dataset')
+    p.add_argument('--dataset',type=str,  default='random8', help='Dataset')
     p.add_argument('--M',     type=int, default=256,       help='Codebook size')
     p.add_argument('--n_subvec', type=int, default=2,      help='PQ: number of sub‑vectors')
     p.add_argument('--L',     type=int, default=2,         help='RQ: number of stages')
@@ -90,7 +90,7 @@ def main():
     elif args.mode == 'rq':
         train_codebook_rq(dataset=args.dataset, EPOCH=args.epoch, L=args.L, M=args.M, init=args.init, LR=args.lr, TAU= args.tau)
     elif args.mode == 'qwk':
-        Q_, K_, V_, meta = create_dataset(args.dataset)
+        Q_, K_, V_, meta, mask = create_dataset(args.dataset)
         query_weighted_kmeans(Q_, K_, V_, meta, M=args.M)
 
     # ----- final summary -----

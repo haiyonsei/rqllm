@@ -81,7 +81,7 @@ def train_codebook_core_pq(init_codebooks, Q_, K_, V_, meta, EPOCH=1000, TAU=0.1
 
 
 def train_codebook_pq(dataset, M=256, n_subvec=1, LR=1e-2, EPOCH=1000, TAU=0.1, init='random'):
-    Q_, K_, V_, meta = create_dataset(dataset)
+    Q_, K_, V_, meta, mask = create_dataset(dataset)
     d_k = meta.D
     D_sub = d_k // n_subvec
     #bpa = n_subvec*d_k/math.log2(M)
@@ -99,5 +99,5 @@ def train_codebook_pq(dataset, M=256, n_subvec=1, LR=1e-2, EPOCH=1000, TAU=0.1, 
 
     with torch.no_grad():
         K_hat, _, _ = soft_quantize_pq(K, codebooks, tau=TAU, ste=True)
-        evaluate(Q, K, K_hat, V, d_k)
+        evaluate(Q, K, K_hat, V, d_k, mask=None)
 
